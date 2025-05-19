@@ -50,10 +50,15 @@ measurement errors.
 :::
 
 ```{r}
+#| label: load-data
+data_fish <- read_csv("Data/BlackfootFish.csv", show_col_types = FALSE)
+```
+
+
+```{r}
 #| label: find-missing-values
 
-data = read_csv("Data/BlackfootFish.csv", show_col_types = FALSE)
-data %>%
+data_fish %>%
   summarise(across(everything(), ~sum(is.na(.))))
 ```
 
@@ -64,7 +69,7 @@ data %>%
 ```{r}
 #| label: map-missing-values-of-fish
 
-map_int(data, ~sum(is.na(.)))
+map_int(data_fish, ~sum(is.na(.)))
 ```
 
 
@@ -73,10 +78,10 @@ map_int(data, ~sum(is.na(.)))
 ```{r}
 #| label: visual-of-missing-values-over-time
 
-dataNA <- filter(data, is.na(weight)) %>%
+dataNA <- filter(data_fish, is.na(weight)) %>%
   mutate(Section = section)
 
-summary_data <- data %>%
+summary_data <- data_fish %>%
   filter(is.na(weight)) %>%
   group_by(year, section) %>%
   summarise(n_missing = n(), .groups = "drop")
@@ -188,14 +193,14 @@ statement in order to create a `length_scaled` variable.
 ```{r}
 #| label: compare-original-with-rescaled-lengths
 
-plot1 = data |>  
+plot1 = data_fish |>  
   ggplot(aes(x = length)) + 
   geom_histogram(binwidth = 45) +
   labs(x = "Original Values of Fish Length (mm)") +
   scale_y_continuous(limits = c(0,4000))
 
 # Code for Q7 plot.
-plot2 = data |>  
+plot2 = data_fish |>  
   ggplot(aes(x = rescale_01(length))) + 
   geom_histogram(binwidth = 0.05) +
   labs(x = "Rescaled Fish Lengths") +
