@@ -1,10 +1,25 @@
+---
+title: "Lab 8"
+author: "Marcos Palominos"
+format: html
+execute:
+  warning: false
+  message: false
+---
+
 The goal of this lab is learn more about exploring missing data and writing
 modular code.
 
 ```{r}
 #| label: setup
-
-
+#| include: false
+#| message: false
+#| warning: false
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(gridExtra)
 ```
 
 ## The Data
@@ -36,9 +51,8 @@ measurement errors.
 
 ```{r}
 #| label: find-missing-values
-library(tidyverse)
-library(dplyr)
-data = read.csv("Data/BlackfootFish.csv")
+
+data = read_csv("Data/BlackfootFish.csv", show_col_types = FALSE)
 data %>%
   summarise(across(everything(), ~sum(is.na(.))))
 ```
@@ -49,7 +63,7 @@ data %>%
 
 ```{r}
 #| label: map-missing-values-of-fish
-library(purrr)
+
 map_int(data, ~sum(is.na(.)))
 ```
 
@@ -58,14 +72,23 @@ map_int(data, ~sum(is.na(.)))
 
 ```{r}
 #| label: visual-of-missing-values-over-time
-library(ggplot2)
-dataNA <- filter(data, is.na(weight))
-dataNA$Section = dataNA$section
-ggplot(data = dataNA, aes(x = year, y = trip, color = Section)) +
-  geom_point() +
-  geom_jitter() +
-  scale_y_discrete(limits = c("1", "2")) +
-  labs(x = "Year", y = "Section", title = "Missing values by year, section, and trip", subtitle = "From 1989-2007, between Scotty Brown and Johnsrud in 2 sections")
+
+dataNA <- filter(data, is.na(weight)) %>%
+  mutate(Section = section)
+
+summary_data <- data %>%
+  filter(is.na(weight)) %>%
+  group_by(year, section) %>%
+  summarise(n_missing = n(), .groups = "drop")
+
+ggplot(summary_data, aes(x = year, y = n_missing, fill = section)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Year",
+    y = "Number of Missing Weight Values",
+    title = "Missing Weights by Year and Section"
+  ) +
+  theme_minimal()
 ```
 
 ## Rescaling the Data
@@ -164,7 +187,7 @@ statement in order to create a `length_scaled` variable.
 
 ```{r}
 #| label: compare-original-with-rescaled-lengths
-library(gridExtra)
+
 plot1 = data |>  
   ggplot(aes(x = length)) + 
   geom_histogram(binwidth = 45) +
